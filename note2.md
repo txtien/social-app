@@ -558,3 +558,5 @@ block content %}
 - You perform an AJAX GET request using $.get() and receive the HTML response in a variable called data. The following are the two scenarios:
     - The response has no content: You got to the end of the results, and there are no more pages to load. You set empty_page to true to prevent additional AJAX requests.
     - The response contains data: You append the data to the HTML element with the image-list ID. The page content expands vertically, appending results when the user approaches the bottom of the page. 
+
+- Make image-list scrollable (add display grid)
