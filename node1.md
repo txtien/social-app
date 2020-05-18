@@ -563,3 +563,133 @@ block content %}
 - Edit `dashboard.html` `<p>Welcome to dashboard</p>` to: 
 <p>Welcome to your dashboard. You can <a href="{% url "edit" %}">edit your profile</a> or <a
         href="{% url "password_change" %}">change your password</a>.</p>
+
+## Using the messages framework
+- The messages framework is located at django.contrib.messages and is included in the default INSTALLED_APPS list of the settings.py 
+    - success(): Success messages to be displayed after an action has been successful
+    - info(): Informational messages
+    - warning(): Something has not yet failed but may fail imminently
+    - error(): An action was not successful or something failed
+    - debug(): Debug messages that will be removed or ignored in a production environment
+
+```python
+from django.contrib import messages
+messages.error(request, 'Something went wrong')
+```
+
+- `account/base.html`, between the <div> element with the header ID and the <div> element with the content ID
+```html
+{% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li class="{{message.tags}}">
+            {{message|safe}}
+            <a href="#" class="close">x</a>
+          </li>
+        {%endfor%}
+      </ul>
+{%endif%}
+```
+
+- `edit` view in `views.py`
+```python
+if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, 'Profile updated successfully')
+else:
+    messages.error(request, "Error updating your profile")
+```
+
+Messages framework includes the context processor `django.contrib.messages.context_processors.messages`, which adds a messages variable to the `request` context, so don't need to add in `return render`
+
+
+# Building a custom authentication backend
+- The AUTHENTICATION_BACKENDS setting includes the list of authentication backends for your project. By default, this setting is set as follows: ['django.contrib.auth.backends.ModelBackend']
+
+[Customizing authentication](https://docs.djangoproject.com/en/3.0/topics/auth/customizing/#other-authentication-sources)
+
+- Django provides a simple way to define your own authentication backends. An authentication backend is a class that provides the following two methods:
+    -  authenticate(): It takes the request object and user credentials as parameters. It has to return a user object that matches those credentials if the credentials are valid, or None otherwise.
+    -  get_user(): This takes a user ID parameter and has to return a user object.
+
+- Creating a custom authentication backend is as simple as writing a Python class that implements both methods. Let's create an authentication backend to let users authenticate in your site using their email address instead of their username
+- Create a new file inside your account application directory and name it `authentication.py`
+```python
+from django.contrib.auth.models import User
+
+class EmailAuthBackend(object):
+    """
+    Authenticate using email
+    """
+    def authenticate(self, request, username=None, password=None):
+        try:
+            user = User.objects.get(email=username)
+            if user.check_password(password):
+                return user
+            return None
+        except User.DoesNotExist:
+            return None
+
+    def get_user(self, user_id):
+        try:
+            return User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return None
+```
+- Edit the settings.py file of your project and add the following setting:
+
+AUTHENTICATION_BACKENDS = [
+'django.contrib.auth.backends.ModelBackend',
+'account.authentication.EmailAuthBackend',
+]            
+
+User credentials will be checked using the `ModelBackend` authentication backend, and if no user is returned, the credentials will be checked using your custom `EmailAuthBackend` backend.
+
+# Adding social authentication to your site
+- Add social authentication like Fb, GG
+- pip install social-auth-app-django==3.1.0
+
+INSTALLED_APPS = [
+#...
+'social_django',
+]
+
+- python manage.py migrate
+
+- `bookmark.urls`
+```python
+urlpatterns = [
+path('admin/', admin.site.urls),
+path('account/', include('account.urls')),
+path('social-auth/', include('social_django.urls', namespace='social')), ]
+
+```
+- Several social services will not allow redirecting users to 127.0.0.1 or localhost after a successful authentication; they expect a domain name. To fix this on Linux or macOS, edit your `/etc/hosts` (In Windows is C:\Windows\System32\Drivers\etc\hosts) file and add the following line to it: `127.0.0.1 mysite.com`
+- It points the `mysite.com` hostname to your own machine. 
+- To verify , runserver and open http://mysite.com:8000/account/login/ in your browser, you should see ALLOWED_HOST error, add `mysite.com` to ALLOWED_HOSTS in `settings.py`
+
+## Running the development server through HTTPS
+- Some of  social authentication methods you are going to use require an HTTPS connection. The `Transport Layer Security (TLS)` protocol is the standard for serving websites through a secure connection. The TLS predecessor is the `Secure Sockets Layer (SSL)`.
+- The Django development server is not able to serve your site through HTTPS. you are going to use the RunServerPlus extension of the package Django Extensions. Django Extensions is a third-party collection of custom extensions for Django. Please note that this is never the method you should use to serve your site in a real environment; this is a development server.
+- pip install django-extensions==2.2.5 
+- pip install werkzeug==0.16.0 `contains a debugger layer required by the RunServerPlus extension`
+- pip install pyOpenSSL==19.0.0 ` required to use the SSL/TLS functionality of RunServerPlus`
+
+INSTALLED_APPS = [
+# ...
+'django_extensions',
+]
+
+- Use the management command runserver_plus provided by Django Extensions: `python manage.py runserver_plus --cert-file cert.crt`
+
+## Authentication using Facebook
+- AUTHENTICATION_BACKENDS in `settings.py`
+
+'social_core.backends.facebook.FacebookOAuth2',
+- Follow book to setup
+
+- `registration/login.html`, bottom of the content block
+
+## Authentication using Google
+- AUTHENTICATION_BACKENDS setting in the settings.py: 'social_core.backends.google.GoogleOAuth2',

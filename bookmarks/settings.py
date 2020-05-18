@@ -25,7 +25,7 @@ SECRET_KEY = 'y$0s38s#^yx9e=l1wp$auou#)&-l1yt0+g0=h8=%awi08(heg#'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['mysite.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'social_django',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -99,6 +101,20 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+AUTHENTICATION_BACKENDS = [
+'django.contrib.auth.backends.ModelBackend',
+'account.authentication.EmailAuthBackend',
+'social_core.backends.facebook.FacebookOAuth2',
+'social_core.backends.google.GoogleOAuth2',
+]     
+
+SOCIAL_AUTH_FACEBOOK_KEY = '610388489831923' # Facebook App ID
+SOCIAL_AUTH_FACEBOOK_SECRET = '0cfa30815efcea564f014069b8943267' # Facebook App Secret
+SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '69612265790-tt63atd1g2qvk9qg8ma2nvcnf7sd3acc.apps.googleusercontent.com' # Google Consumer Key
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'YLPhxZLoLBKDr2Oh6vcMh8Qs' # Google Consumer Secret
 
 
 # Internationalization
